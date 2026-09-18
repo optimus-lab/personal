@@ -6,7 +6,7 @@ function setup() {
   if (!sh) sh = ss.insertSheet(SHEET_NAME);
   const headers = [
     'id','updatedAt','name','birth','phone','photoUrl',
-    'blood','allergies','medications','conditions',
+    'blood','nss','allergies','medications','conditions',
     'bike','bikeColor','plates','insurance',
     'contactName','contactPhone','instructions','publicMedical'
   ];
@@ -46,7 +46,7 @@ function saveProfile(p) {
   const sh = getSheet();
   const rowValues = [
     p.id, new Date(), clean(p.name), clean(p.birth), clean(p.phone), clean(p.photoUrl),
-    clean(p.blood), clean(p.allergies), clean(p.medications), clean(p.conditions),
+    clean(p.blood), clean(p.nss), clean(p.allergies), clean(p.medications), clean(p.conditions),
     clean(p.bike), clean(p.bikeColor), clean(p.plates), clean(p.insurance),
     clean(p.contactName), clean(p.contactPhone), clean(p.instructions),
     p.publicMedical !== false
@@ -73,8 +73,8 @@ function getProfile(id) {
     if (String(values[i][0]) === String(id)) {
       const p = {};
       headers.forEach((h,j) => p[h] = values[i][j]);
-      // Never expose NSS: V3 deliberately does not store or publish it.
-      p.updatedAt = p.updatedAt instanceof Date ? p.updatedAt.toISOString() : p.updatedAt;
+      // NSS is stored for the account owner but deliberately excluded from the public response.
+      delete p.nss; p.updatedAt = p.updatedAt instanceof Date ? p.updatedAt.toISOString() : p.updatedAt;
       return json({success:true,profile:p});
     }
   }
