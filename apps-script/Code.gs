@@ -44,6 +44,7 @@ function saveProfile(p) {
   }
 
   const sh = getSheet();
+  if (p.photoDataUrl) p.photoUrl = savePhoto(p.id, p.photoDataUrl);
   const rowValues = [
     p.id, new Date(), clean(p.name), clean(p.birth), clean(p.phone), clean(p.photoUrl),
     clean(p.blood), clean(p.nss), clean(p.allergies), clean(p.medications), clean(p.conditions),
@@ -87,7 +88,7 @@ function getSheet() {
   if (!sh) {
     sh = ss.insertSheet(SHEET_NAME);
     sh.appendRow([
-      'id','updatedAt','name','birth','phone','photoUrl','blood',
+      'id','updatedAt','name','birth','phone','photoUrl','blood','nss',
       'allergies','medications','conditions','bike','bikeColor',
       'plates','insurance','contactName','contactPhone','instructions','publicMedical'
     ]);
@@ -102,4 +103,22 @@ function clean(v) {
 function json(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+function savePhoto(id, dataUrl) {
+  try {
+    const match = String(dataUrl).match(/^data:(image\\/[^;]+);base64,(.+)$/);
+    if (!match) return '';
+    const mime = match[1];
+    const bytes = Utilities.base64Decode(match[2]);
+    const blob = Utilities.newBlob(bytes, mime, 'moto-sos-' + id);
+    const folderName = 'MOTO SOS NFC - Fotos';
+    const folders = DriveApp.getFoldersByName(folderName);
+    const folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
+    const file = folder.createFile(blob);
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    return file.getDownloadUrl();
+  } catch (err) {
+    return '';
+  }
 }
